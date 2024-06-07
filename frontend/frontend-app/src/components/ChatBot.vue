@@ -24,7 +24,7 @@ export default {
   methods: {
     async fetchContent() {
       try {
-        const response = await axios.post('http://YOUR_IP_ADDRESS:5001/api/extract', { url: this.url });
+        const response = await axios.post('http://192.168.68.54:5001/api/extract', { url: this.url });
         this.content = response.data.text;
       } catch (error) {
         console.error(error);
