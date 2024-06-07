@@ -23,6 +23,26 @@ import ChatWindow from "./ChatWindow.vue";
 import InputArea from "./InputArea.vue";
 import HistoryList from "./HistoryList.vue";
 
+const allowedDomains = ["example.com", "another-trusted-domain.com"];
+
+function isAllowedDomain(url) {
+  const { hostname } = new URL(url);
+  return allowedDomains.includes(hostname);
+}
+
+function isValidUrl(url) {
+  const pattern = new RegExp(
+    "^(https?:\\/\\/)?" + // protocol
+      "((([a-zA-Z\\d]([a-zA-Z\\d-]*[a-zA-Z\\d])*)\\.)+[a-zA-Z]{2,}|" + // domain name
+      "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
+      "(\\:\\d+)?(\\/[-a-zA-Z\\d%_.~+]*)*" + // port and path
+      "(\\?[;&a-zA-Z\\d%_.~+=-]*)?" + // query string
+      "(\\#[-a-zA-Z\\d_]*)?$",
+    "i" // fragment locator
+  );
+  return !!pattern.test(url);
+}
+
 export default {
   components: {
     ChatWindow,
@@ -81,6 +101,12 @@ export default {
       this.loading = true;
       this.error = "";
       try {
+        if (!isAllowedDomain(this.formattedUrl)) {
+          throw new Error("Domain not allowed");
+        }
+        if (!isValidUrl(this.formattedUrl)) {
+          throw new Error("Invalid URL");
+        }
         const response = await axios.post(
           "http://192.168.68.54:5001/api/extract",
           { url: this.formattedUrl }
@@ -92,7 +118,7 @@ export default {
         this.addMessage(
           "bot",
           `
-          <p>${this.highlightedContent}</p>
+          <p>${this.filteredContent}</p>
           <p><strong>Word Count:</strong> ${this.wordCount}</p>
           <p><strong>Summary:</strong> ${this.summary}</p>
         `
@@ -132,18 +158,6 @@ export default {
       this.filteredContent = "";
       this.error = "";
       this.searchQuery = "";
-    },
-    isValidUrl(url) {
-      const pattern = new RegExp(
-        "^(https?:\\/\\/)?" + // protocol
-          "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
-          "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
-          "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
-          "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
-          "(\\#[-a-z\\d_]*)?$",
-        "i" // fragment locator
-      );
-      return !!pattern.test(url);
     },
     escapeRegExp(string) {
       return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

@@ -15,5 +15,8 @@
 <script>
 export default {
   props: ["messages", "loading"],
+  mounted() {
+    console.log("ChatWindow mounted");
+  },
 };
 </script>
